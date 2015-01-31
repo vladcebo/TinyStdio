@@ -95,6 +95,11 @@ functions.
 
 For further details see source code.
 
+Author: Cebotari Vladislav
+Added floating point support with different precision
+printing support (also leading zeros x.y format supported)
+
+
 regs Kusti, 23.10.2004
 */
 
@@ -163,8 +168,7 @@ int tfp_snprintf(char *str, size_t size, const char *fmt, ...) \
      _TFP_SPECIFY_PRINTF_FMT(3, 4);
 int tfp_vsprintf(char *str, const char *fmt, va_list ap);
 
-void   float_to_s(double a, char buffer[]);
-double s_to_float(char* str);
+
 
 
 int tfp_sprintf(char *str, const char *fmt, ...) \

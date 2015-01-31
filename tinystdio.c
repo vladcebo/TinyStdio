@@ -280,7 +280,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
             p.width = 0;
             p.align_left = 0;
             p.sign = 0;
-            p.prec = 3;
+            p.prec = 2;
 
             /* Flags */
             while ((ch = *(fmt++))) {
@@ -309,7 +309,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
              * we ignore the 'y' digit => this ignores 0-fill
              * size and makes it == width (ie. 'x') */
             if (ch == '.') {
-              p.lz = 1;  /* zero-padding */
+              //p.lz = 1;  /* zero-padding */
               /* ignore actual 0-fill size: */
                ch = *(fmt++);
                if (ch >= '0' && ch <= '9')
@@ -426,6 +426,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
                 putf(putp, ch);
                 break;
             case 'f':
+            case 'F':
                 fval  = va_arg(va, double);
                 if (fval < 0)
                 {
@@ -443,10 +444,17 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
 
                 }
                 fiter--;
-                while (p.width-- > p.prec + fiter + 2)
-                {
-                	putf(putp, '0');
-                }
+                /* Leading zeros */
+                if (p.lz)
+					while (p.width-- > p.prec + fiter + 2)
+					{
+						putf(putp, '0');
+					}
+                else
+					while (p.width-- > p.prec + fiter + 2)
+					{
+						putf(putp, ' ');
+					}
                 while (fiter > -1)
                 {
                     putf(putp, '0' + (temp_buffer[fiter--]));
@@ -477,62 +485,6 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
  abort:;
 }
 
-void float_to_s(double a, char buffer[])
-{
-	if (a < 0)
-	{
-		a = -a;
-		tfp_sprintf(buffer, "-%d.%d", (int)a, (int)((a - (int)a)*1000));
-	}
-	else
-		tfp_sprintf(buffer, "%d.%d", (int)a, (int)((a - (int)a)*1000));
-
-}
-
-
-double s_to_float(char* str)
-{
-
-	int neg;
-	double fvalue = 0;
-	int pos;
-
-    if (*str == '-')
-    {
-        neg = 1;
-        str++;
-    }
-    else
-        neg = 0;
-
-    int point_flag = 0;
-    int exp = 0;
-    for (fvalue = 0, pos = 0; *str != 0 ; str++, pos++)
-    {
-
-            if (*str == '.')
-            {
-                point_flag = 1;
-                str++;
-            }
-            if ('0' <= *str && *str <= '9')
-                    fvalue = fvalue*10 + (int)(*str - '0');
-            else
-                    break;
-            if (point_flag == 1)
-                exp++;
-
-    }
-
-    if (pos == 0)
-            return 0;
-    for (pos = 0; pos < exp; pos++)
-        fvalue = fvalue/10.0;
-
-    return neg ? -fvalue : fvalue;
-
-
-}
 
 
 
@@ -639,7 +591,8 @@ int tfp_vsscanf(const char* str, const char* format, ...)
 {
         va_list ap;
         int value, tmp;
-        float fvalue;
+        float  fvalue;
+        double Fvalue;
         int count = 0;
         int pos;
         char neg, fmt_code;
@@ -773,10 +726,45 @@ int tfp_vsscanf(const char* str, const char* format, ...)
                                         return count;
                                 for (pos = 0; pos < exp; pos++)
                                     fvalue = fvalue/10.0;
-
                                 *(va_arg(ap, float*)) = neg ? -fvalue : fvalue;
                                 count++;
                                 break;
+
+                        case 'F':
+							   if (*str == '-')
+							   {
+								   neg = 1;
+								   str++;
+							   }
+							   else
+								   neg = 0;
+
+							   int Fpoint_flag = 0;
+							   int Fexp = 0;
+							   for (Fvalue = 0, pos = 0; *str != 0 ; str++, pos++)
+							   {
+
+									   if (*str == '.')
+									   {
+										   Fpoint_flag = 1;
+										   str++;
+									   }
+									   if ('0' <= *str && *str <= '9')
+											   Fvalue = Fvalue*10 + (int)(*str - '0');
+									   else
+											   break;
+									   if (Fpoint_flag == 1)
+										   Fexp++;
+
+							   }
+
+							   if (pos == 0)
+									   return count;
+							   for (pos = 0; pos < Fexp; pos++)
+								   Fvalue = Fvalue/10.0;
+							   *(va_arg(ap, double*)) = neg ? -Fvalue : Fvalue;
+							   count++;
+							   break;
 
                         case 'c':
                                 *(va_arg(ap, char*)) = *str;
