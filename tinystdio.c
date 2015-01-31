@@ -78,6 +78,7 @@ struct param {
     char sign;          /**<  The sign to display (if any) */
     unsigned int base;  /**<  number base (e.g.: 8, 10, 16) */
     char *bf;           /**<  Buffer to output */
+    char prec;
 };
 
 
@@ -257,6 +258,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
     int    temp_buffer[10];
     int    fpart;
     int    fiter;
+    int    ffactor;
 #ifdef PRINTF_LONG_SUPPORT
     char bf[23];  /* long = 64b on some architectures */
 #else
@@ -278,6 +280,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
             p.width = 0;
             p.align_left = 0;
             p.sign = 0;
+            p.prec = 3;
 
             /* Flags */
             while ((ch = *(fmt++))) {
@@ -308,9 +311,14 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
             if (ch == '.') {
               p.lz = 1;  /* zero-padding */
               /* ignore actual 0-fill size: */
-              do {
-                ch = *(fmt++);
-              } while ((ch >= '0') && (ch <= '9'));
+               ch = *(fmt++);
+               if (ch >= '0' && ch <= '9')
+            	   p.prec = ch - '0';
+               do
+               {
+            	   ch = *(fmt++);
+               }   while (ch >= '0' && ch <= '9');
+
             }
 
 #ifdef PRINTF_SIZE_T_SUPPORT
@@ -426,6 +434,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
                 }
 
                 fpart = (int)fval;
+
                 fiter = 0;
                 while (fpart != 0)
                 {
@@ -434,13 +443,19 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
 
                 }
                 fiter--;
+                while (p.width-- > p.prec + fiter + 2)
+                {
+                	putf(putp, '0');
+                }
                 while (fiter > -1)
                 {
                     putf(putp, '0' + (temp_buffer[fiter--]));
                 }
 
                 putf(putp, '.');
-                fpart = (int)((fval - (int)fval)*1000);
+                ffactor = 1;
+                while (p.prec-- > 0) ffactor *= 10;
+                fpart = (int)((fval - (int)fval)*ffactor);
                 fiter = 0;
                 while (fpart != 0)
                 {
