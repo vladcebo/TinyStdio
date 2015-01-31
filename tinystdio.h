@@ -95,12 +95,18 @@ functions.
 
 For further details see source code.
 
-Author: Cebotari Vladislav
-Added floating point support with different precision
-printing support (also leading zeros x.y format supported)
-
-
 regs Kusti, 23.10.2004
+
+
+31.01.2015
+Update from  Cebotari Vladislav
+	cebotari.vladislav@gmail.com
+
+- Added floating point support with different precision in x.y format
+	also with leading zeros possibility (like standart printf function).
+	Floating point printf is tested on tiva launchpad (tm4c123gh6pm TI mcu)
+- Also vsscanf for floats and double %f - float, %F - double
+
 */
 
 #ifndef __TFP_PRINTF__
