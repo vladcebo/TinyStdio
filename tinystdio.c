@@ -74,7 +74,7 @@ struct param {
     char alt:1;         /**<  alternate form */
     char uc:1;          /**<  Upper case (for base16 only) */
     char align_left:1;  /**<  0 == align right (default), 1 == align left */
-    unsigned int width; /**<  field width */
+    int width; /**<  field width */
     char sign;          /**<  The sign to display (if any) */
     unsigned int base;  /**<  number base (e.g.: 8, 10, 16) */
     char *bf;           /**<  Buffer to output */
@@ -199,6 +199,64 @@ static char a2u(char ch, const char **src, int base, unsigned int *nump)
     return ch;
 }
 
+
+void float_to_s(double a, char buffer[])
+{
+	if (a < 0)
+	{
+		a = -a;
+		tfp_sprintf(buffer, "-%d.%d", (int)a, (int)((a - (int)a)*1000));
+	}
+	else
+		tfp_sprintf(buffer, "%d.%d", (int)a, (int)((a - (int)a)*1000));
+
+}
+
+
+double s_to_float(char* str)
+{
+
+	int neg;
+	double fvalue = 0;
+	int pos;
+
+    if (*str == '-')
+    {
+        neg = 1;
+        str++;
+    }
+    else
+        neg = 0;
+
+    int point_flag = 0;
+    int exp = 0;
+    for (fvalue = 0, pos = 0; *str != 0 ; str++, pos++)
+    {
+
+            if (*str == '.')
+            {
+                point_flag = 1;
+                str++;
+            }
+            if ('0' <= *str && *str <= '9')
+                    fvalue = fvalue*10 + (int)(*str - '0');
+            else
+                    break;
+            if (point_flag == 1)
+                exp++;
+
+    }
+
+    if (pos == 0)
+            return 0;
+    for (pos = 0; pos < exp; pos++)
+        fvalue = fvalue/10.0;
+
+    return neg ? -fvalue : fvalue;
+
+
+}
+
 static void putchw(void *putp, putcf putf, struct param *p)
 {
     char ch;
@@ -259,6 +317,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
     int    fpart;
     int    fiter;
     int    ffactor;
+    int    sign;
 #ifdef PRINTF_LONG_SUPPORT
     char bf[23];  /* long = 64b on some architectures */
 #else
@@ -294,6 +353,9 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
                 case '#':
                     p.alt = 1;
                     continue;
+                case '+':
+                	p.sign = 1;
+                	continue;
                 default:
                     break;
                 }
@@ -428,11 +490,17 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
             case 'f':
             case 'F':
                 fval  = va_arg(va, double);
+                sign = 0;
                 if (fval < 0)
-                {
-                    putf(putp, '-');
-                    fval = - fval;
-                }
+				   {
+                	   sign    = 1;
+					   p.width--;
+					   fval    = - fval;
+				   }
+				   else if (p.sign) {
+					   sign = 2;
+					   p.width--;
+				   }
 
                 fpart = (int)fval;
 
@@ -444,17 +512,38 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
 
                 }
                 fiter--;
+                if (fiter == -1)
+                	p.width--;
                 /* Leading zeros */
-                if (p.lz)
+                if (p.lz) {
+
+                	if (sign == 1)
+ 					   putf(putp, '-');
+                	else if (sign == 2)
+                	   putf(putp, '+');
+
 					while (p.width-- > p.prec + fiter + 2)
 					{
 						putf(putp, '0');
 					}
+                }
                 else
+                {
+
 					while (p.width-- > p.prec + fiter + 2)
 					{
 						putf(putp, ' ');
 					}
+
+                	if (sign == 1)
+ 					   putf(putp, '-');
+                	else if (sign == 2)
+                	   putf(putp, '+');
+
+                }
+
+                if (fiter == -1)
+                	putf(putp, '0');
                 while (fiter > -1)
                 {
                     putf(putp, '0' + (temp_buffer[fiter--]));
@@ -462,8 +551,13 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
 
                 putf(putp, '.');
                 ffactor = 1;
-                while (p.prec-- > 0) ffactor *= 10;
-                fpart = (int)((fval - (int)fval)*ffactor);
+                while (p.prec-- > 0)
+                {
+                	ffactor *= 10;
+                	fpart = (int)((fval - (int)fval)*ffactor);
+                	if (fpart == 0)
+						putf(putp, '0');
+                }
                 fiter = 0;
                 while (fpart != 0)
                 {

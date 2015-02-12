@@ -30,10 +30,10 @@ void print_test(int test_nr, const char* fmt, ...)
 
 	if (strcmp(stdio_buff, tiny_buff) != 0)
 	{
-		printf("%d. Test failed.\nExpected: %s\nGot:      %s",test_nr,  stdio_buff, tiny_buff);
+		printf("%d. Test failed.\nExpected: %s\nGot:      %s\n\n",test_nr,  stdio_buff, tiny_buff);
 	}
 	else
-		printf("%d. Test passed.\n\t%s\n", test_nr, tiny_buff);
+		printf("%d. Test passed.\n\t%s\n\n", test_nr, tiny_buff);
 
 	va_end (args);
 
@@ -49,6 +49,8 @@ int main(void)
 	print_test(4, "Floats %7.1f %3.2f %05.6f, %05.7f %07.2f", 2.1, 5.33, 2.3120001, 6.66, 3.215);
 	print_test(5, "Written in HEX! %05X %x %06x %6x %07X", 78, 35, -20, 5, 152);
 	print_test(6, "%s address! %05p", "Pointer", 123);
+	print_test(7, "%3.5f %6.2f %2.6f %03.6f %2.6f %f", 0.412, -0.02, 0.000231, -1.1234, -0.666687, 0.3);
+
 
 	return 0;
 }
