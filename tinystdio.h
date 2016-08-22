@@ -103,7 +103,7 @@ Update from  Cebotari Vladislav
 	cebotari.vladislav@gmail.com
 
 - Added floating point support with different precision in x.y format
-	also with leading zeros possibility (like standart printf function).
+	also with leading zeros possibility (like standard printf function).
 	Floating point printf is tested on tiva launchpad (tm4c123gh6pm TI mcu)
 - Also vsscanf for floats and double %f - float, %F - double
 
@@ -115,6 +115,7 @@ Update from  Cebotari Vladislav
 #include <stdarg.h>
 
 /* Global configuration */
+
 
 /* Set this to 0 if you do not want to provide tfp_printf */
 #ifndef TINYPRINTF_DEFINE_TFP_PRINTF
@@ -133,6 +134,8 @@ Update from  Cebotari Vladislav
 #ifndef TINYPRINTF_OVERRIDE_LIBC
 # define TINYPRINTF_OVERRIDE_LIBC 0
 #endif
+
+# define TINY_PRINTF_FP_PRECISION 6
 
 /* Optional external types dependencies */
 
@@ -166,7 +169,7 @@ typedef void (*putcf) (void *, char);
    callback and pass to it the right 'putp' it is expecting.
 */
 void tfp_format(void *putp, putcf putf, const char *fmt, va_list va);
-int tfp_vsscanf(const char* str, const char* format, ...);
+int  tfp_vsscanf(const char* str, const char* format, ...);
 
 #if TINYPRINTF_DEFINE_TFP_SPRINTF
 int tfp_vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
